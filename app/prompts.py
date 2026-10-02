@@ -389,7 +389,7 @@ Examples:
 "Is English widely spoken in Japan?"
 
 This intent may require travel tools, RAG, web information,
-or specialist agents later.
+or specialists agents later.
 
 Do NOT classify every travel-related question as start_trip.
 
