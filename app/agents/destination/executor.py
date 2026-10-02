@@ -10,6 +10,12 @@ T = TypeVar("T", bound=BaseModel)
 
 MAX_PROMPT_CHARS = 25_000
 
+MAX_CONCURRENT_RESEARCH_CALLS = 6
+
+research_semaphore = asyncio.Semaphore(
+    MAX_CONCURRENT_RESEARCH_CALLS
+)
+
 class ResearchAgentError(Exception):
     pass
 
@@ -34,6 +40,7 @@ def validate_prompt_size(
             f"{max_chars:,} characters."
         )
 
+
 async def execute_research_agent(
         *,
         agent_name: str,
@@ -44,16 +51,17 @@ async def execute_research_agent(
 
     validate_prompt_size(prompt)
     try:
-        async with asyncio.timeout(timeout_seconds):
-            result = await structured_llm.ainvoke(prompt)
+        async with research_semaphore:
+            async with asyncio.timeout(timeout_seconds):
+                result = await structured_llm.ainvoke(prompt)
 
-        if not isinstance(result, BaseModel):
-            raise ResearchAgentOutputError(
-                f"{agent_name} did not return "
-                "a Pydantic model."
-            )
+            if not isinstance(result, BaseModel):
+                raise ResearchAgentOutputError(
+                    f"{agent_name} did not return "
+                    "a Pydantic model."
+                )
 
-        return result
+            return result
 
     except TimeoutError as exc:
         logger.exception(

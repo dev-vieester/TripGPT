@@ -17,3 +17,13 @@ class Settings(BaseSettings):
     )
 
 settings = Settings()
+
+PILOT_DESTINATIONS = [
+    "United Kingdom",
+    "United States",
+    "Canada",
+    "France",
+    "United Arab Emirates",
+    "South Africa",
+    "Kenya",
+]

@@ -1,4 +1,5 @@
-from typing import TypedDict
+import operator
+from typing import TypedDict, Annotated
 from app.schemas.trip import TripProfile
 from app.schemas.destination import (
     VisaAssessment,
@@ -28,4 +29,12 @@ class CountryResearchState(TypedDict):
     attractions: AttractionAssessment | None
 
     dossier: CountryResearchDossier | None
+
+class DestinationResearchState(TypedDict):
+    trip_profile: TripProfile
+
+    destination_research: Annotated[
+        list[CountryResearchDossier],
+        operator.add
+    ]
 

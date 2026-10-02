@@ -1,4 +1,7 @@
-from app.graph.destination.state import CountryResearchState
+from langgraph.types import Send
+
+from app.core.config import PILOT_DESTINATIONS
+from app.graph.destination.state import CountryResearchState, DestinationResearchState
 
 from app.schemas.destination import CountryResearchDossier
 
@@ -149,4 +152,33 @@ async def build_country_dossier(
 
     return {
         "dossier": dossier
+    }
+
+def dispatch_countries(
+        state: DestinationResearchState
+):
+    return [
+        Send(
+            "research_country",
+            {
+                "country": country,
+                "trip_profile": state["trip_profile"]
+            },
+        )
+        for country in PILOT_DESTINATIONS
+    ]
+
+async def research_country(
+        state: CountryResearchState
+)-> dict:
+    from app.graph.destination.workflow import country_research_graph
+
+    result = await country_research_graph.ainvoke(
+        state
+    )
+
+    dossier = result["dossier"]
+
+    return {
+        "destination_research": [dossier]
     }

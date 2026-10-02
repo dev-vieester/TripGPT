@@ -1,7 +1,7 @@
 from langgraph.graph import StateGraph, START, END
 
 from app.graph.destination.state import (
-    CountryResearchState,
+    CountryResearchState, DestinationResearchState,
 )
 
 from app.graph.destination.nodes import (
@@ -14,7 +14,7 @@ from app.graph.destination.nodes import (
     weather_agent,
     language_agent,
     attractions_agent,
-    build_country_dossier,
+    build_country_dossier, research_country, dispatch_countries,
 )
 
 
@@ -76,7 +76,25 @@ def build_country_research_graph():
 
     return builder.compile()
 
+def build_destination_research_graph():
+    builder = StateGraph(DestinationResearchState)
 
+    builder.add_node(
+        "research_country",
+        research_country
+    )
+
+    builder.add_conditional_edges(
+        START,
+        dispatch_countries,
+        ['research_country']
+    )
+
+    builder.add_edge("research_country", END)
+
+    return builder.compile()
+
+destination_research_graph = build_destination_research_graph()
 country_research_graph = (
     build_country_research_graph()
 )
