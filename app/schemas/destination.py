@@ -184,3 +184,15 @@ class HealthAssessment(BaseModel):
         SourcedFact[str]
     ] = Field(default_factory=list)
 
+class CountryResearchDossier(BaseModel):
+    country: str
+
+    visa: VisaAssessment
+    visa_processing: VisaProcessingAssessment
+    budget: BudgetAssessment
+    safety: SafetyAssessment
+    health: HealthAssessment
+    outbreak: OutbreakAssessment
+    weather: WeatherAssessment
+    language: LanguageAssessment
+    attractions: AttractionAssessment

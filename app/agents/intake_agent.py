@@ -14,6 +14,8 @@ llm = ChatGoogleGenerativeAI(
     model=settings.google_model,
     temperature=0,
     api_key=settings.google_api_key,
+    timeout=30,
+    max_retries=2,
 )
 
 structured_llm = llm.with_structured_output(TripInformationExtraction)
