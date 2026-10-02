@@ -29,7 +29,8 @@ async def classify_conversation_intent(
         message: str,
         current_stage: ConversationStage = ConversationStage.NEW,
         pending_fields: list[str] | None  = None,
-        trip_profile: TripProfile | None = None
+        trip_profile: TripProfile | None = None,
+        profile_update_field: str | None = None
 ) -> ConversationRoute:
     pending_context = (
         pending_fields if pending_fields else "None"
@@ -38,6 +39,12 @@ async def classify_conversation_intent(
     profile_context = (
         trip_profile.model_dump(mode="json")
         if trip_profile
+        else "None"
+    )
+
+    update_context = (
+        profile_update_field
+        if profile_update_field
         else "None"
     )
 
@@ -52,6 +59,9 @@ async def classify_conversation_intent(
     
     Current trip profile:
     {profile_context}
+    
+    Profile field currently being updated:
+    {update_context}
     
     Latest user message:
     {message}

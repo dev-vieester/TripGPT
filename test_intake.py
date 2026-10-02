@@ -2,14 +2,14 @@ import asyncio
 from uuid import uuid4
 
 from langchain_core.messages import HumanMessage
-from langgraph.types import Command
 
 from app.graph.workflow import graph
+from app.schemas.conversation import ConversationStage
 from app.schemas.trip import TripProfile
 
 
 async def main():
-
+    # One thread_id = one TripGPT conversation
     thread_id = str(uuid4())
 
     config = {
@@ -18,48 +18,123 @@ async def main():
         }
     }
 
-    print(f"\nThread ID: {thread_id}")
-    print("-" * 50)
+    print("=" * 60)
+    print("TripGPT Conversation Test")
+    print("=" * 60)
+    print(f"Thread ID: {thread_id}")
+    print("Type 'exit' to stop.\n")
 
-    first_message = input("\nYou: ")
+    first_turn = True
 
-    initial_state = {
-        "messages": [
-            HumanMessage(content=first_message)
-        ],
-        "thread_id": thread_id,
-        "trip_profile": TripProfile(),
-        "missing_required_fields": [],
-        "intake_complete": False,
-        "candidate_destinations": [],
-        "destination_assessments": [],
-        "errors": [],
-    }
+    while True:
+        user_input = input("You: ").strip()
 
-    result = await graph.ainvoke(
-        initial_state,
-        config=config,
-    )
+        if user_input.lower() in {"exit", "quit"}:
+            print("\nConversation ended.")
+            break
 
-    while "__interrupt__" in result:
-        interrupt_data = result["__interrupt__"][0].value
+        if not user_input:
+            continue
+
+        # On the first invocation, initialize our TripGPT state.
+        if first_turn:
+            input_state = {
+                "messages": [
+                    HumanMessage(content=user_input)
+                ],
+                "thread_id": thread_id,
+                "current_stage": ConversationStage.NEW,
+                "current_intent": None,
+                "trip_profile": TripProfile(),
+                "missing_required_fields": [],
+                "pending_fields": [],
+                "intake_complete": False,
+                "candidate_destinations": [],
+                "destination_assessments": [],
+                "selected_destination": None,
+                "errors": [],
+            }
+
+            first_turn = False
+
+        else:
+            # After the first invocation, the checkpointer already
+            # contains the existing state.
+            #
+            # We only need to add the new user message.
+            input_state = {
+                "messages": [
+                    HumanMessage(content=user_input)
+                ]
+            }
+
+        try:
+            result = await graph.ainvoke(
+                input_state,
+                config=config,
+            )
+
+        except Exception as exc:
+            print("\n[ERROR]")
+            print(type(exc).__name__)
+            print(str(exc))
+            print()
+            continue
+
+        print("\n" + "-" * 60)
+
+        # Latest AI response
+        messages = result.get("messages", [])
+
+        if messages:
+            latest_message = messages[-1]
+
+            print(
+                f"TripGPT: "
+                f"{getattr(latest_message, 'content', '')}"
+            )
+
+        # Debug information
+        print("\n[DEBUG STATE]")
+
+        current_intent = result.get("current_intent")
+        current_stage = result.get("current_stage")
 
         print(
-            f"\nTripGPT: "
-            f"{interrupt_data['message']}"
+            "Intent:",
+            getattr(current_intent, "value", current_intent)
         )
 
-        user_response = input("\nYou: ")
-
-        result = await graph.ainvoke(
-            Command(resume=user_response),
-            config=config,
+        print(
+            "Stage:",
+            getattr(current_stage, "value", current_stage)
         )
 
-    print("\n" + "=" * 50)
-    print("FINAL STATE")
-    print("=" * 50)
-    print(result)
+        print(
+            "Pending fields:",
+            result.get("pending_fields")
+        )
+
+        print(
+            "Missing fields:",
+            result.get("missing_required_fields")
+        )
+
+        print(
+            "Intake complete:",
+            result.get("intake_complete")
+        )
+
+        trip_profile = result.get("trip_profile")
+
+        if trip_profile:
+            print("\nTrip Profile:")
+
+            for field, value in trip_profile.model_dump().items():
+                print(f"  {field}: {value}")
+
+        print("-" * 60)
+        print()
 
 
 if __name__ == "__main__":

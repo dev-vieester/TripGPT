@@ -17,6 +17,7 @@ class TripGPTState(TypedDict):
     current_intent: ConversationIntent | None
 
     trip_profile: TripProfile
+    profile_update_field: str | None
     missing_required_fields: list[str]
     pending_fields: list[str]
     intake_complete: bool

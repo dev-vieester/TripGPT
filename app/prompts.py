@@ -70,10 +70,28 @@ RULES
     "I want to travel December 20."
     -> departure_date = "2026-12-20"
 
+    "I want to travel Dec 20."
+    -> departure_date = "2026-12-20"
+
+    "I want to travel 20 Dec."
+    -> departure_date = "2026-12-20"
+
     "I want to travel January 10."
     -> departure_date = "2027-01-10"
 
     "I want to travel December 20, 2027."
+    -> departure_date = "2027-12-20"
+
+    "I want to travel Dec 20, 2027."
+    -> departure_date = "2027-12-20"
+
+    "I want to travel 2027-12-20."
+    -> departure_date = "2027-12-20"
+
+    "I want to travel 12/20/2027."
+    -> departure_date = "2027-12-20"
+
+    "I want to travel 20/12/2027."
     -> departure_date = "2027-12-20"
 
     Relative dates may be resolved when they clearly identify
@@ -520,4 +538,65 @@ IMPORTANT ROUTING RULES
 11. Do not answer the user.
 
 12. Return only the structured output required by the schema.
+
+REQUEST_TRIP_INFORMATION_UPDATE
+
+Use this when the user expresses a desire to modify their existing
+trip profile but does NOT provide the new value.
+
+Examples:
+- "I want to change something."
+- "Can I update my trip information?"
+- "I want to change my budget."
+- "I need to modify my travel dates."
+
+Do NOT use this intent when the user provides the replacement value.
+
+Examples:
+- "Change my budget to $2000."
+- "Actually I want to travel for 14 days."
+- "Change my departure date to December 20."
+
+Those are UPDATE_TRIP_INFORMATION.
 """
+
+PROFILE_UPDATE_SYSTEM_PROMPT = """
+You identify which TripProfile field the user wants to change.
+
+Valid fields:
+
+- origin_country
+- nationality
+- budget
+- budget_currency
+- departure_date
+- trip_duration_days
+- interests
+- preferred_languages
+- health_requirements
+- accessibility_requirements
+
+Return the field only when the user clearly identifies what
+they want to change.
+
+Examples:
+
+"I want to change my budget."
+field = "budget"
+
+"I want to change my travel date."
+field = "departure_date"
+
+"I want to update how long I'm travelling."
+field = "trip_duration_days"
+
+"I want to change something."
+field = null
+
+"I need to update my profile."
+field = null
+
+Do not invent a field when the user's meaning is unclear.
+"""
+
+

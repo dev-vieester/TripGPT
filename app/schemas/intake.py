@@ -1,6 +1,6 @@
 from datetime import date
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class TripInformationExtraction(BaseModel):
@@ -59,3 +59,17 @@ class TripInformationExtraction(BaseModel):
         default=None,
         description="Accessibility requirements explicitly mentioned."
     )
+
+    @field_validator(
+        "interests",
+        "preferred_languages",
+        "health_requirements",
+        "accessibility_requirements",
+        mode="before",
+    )
+    @classmethod
+    def normalize_empty_list_fields(cls, value):
+        if isinstance(value, str) and value.strip() == "":
+            return []
+
+        return value

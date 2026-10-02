@@ -1,5 +1,12 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from datetime import date
+
+LIST_TRIP_FIELDS = {
+    "interests",
+    "preferred_languages",
+    "health_requirements",
+    "accessibility_requirements",
+}
 
 REQUIRED_TRIP_FIELDS = [
     "origin_country",
@@ -29,3 +36,17 @@ class TripProfile(BaseModel):
 
     health_requirements: list[str] | None = None
     accessibility_requirements: list[str] | None = None
+
+    @field_validator(
+        "interests",
+        "preferred_languages",
+        "health_requirements",
+        "accessibility_requirements",
+        mode="before",
+    )
+    @classmethod
+    def normalize_empty_list_fields(cls, value):
+        if isinstance(value, str) and value.strip() == "":
+            return []
+
+        return value
